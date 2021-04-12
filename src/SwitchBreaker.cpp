@@ -1,22 +1,35 @@
 #include <Arduino.h>
+#include <ESP8266WiFi.h>
+#include <WiFiClient.h>
+#include <ESP8266WebServer.h>
+#include <ESP8266mDNS.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1331.h>
+#include <SPI.h>
+
+#include <Credentials.h>
 
 // OLED Mapping
 // GND - GND
 // VCC - 3.3V
-// SCK - D5
-// SDA - D7
-// RST - D2
-// DC  - D1
-// CS  - D8
+// SCK - D5 - 14
+// SDA - D7 - 13
+// RST - D2 - 4
+// DC  - D1 - 5
+// CS  - D8 - 15
 
 // OLED
 #define OLED_SCLK 14
 #define OLED_MOSI 13
-#define OLED_CS 15
 #define OLED_RST 4
 #define OLED_DC 5
+#define OLED_CS 1
 
-// Potentiometer - A0
+// Buttons - SD2 and SD3 (GPIOs 9 and 10)
+#define BUT1 9
+#define BUT2 10
+#define BUT_DEBOUNCE 200
+
 // MX Switch - D4
 #define MX_PIN 2
 #define MX_DEBOUNCE 100
@@ -26,7 +39,7 @@
 // PWM pin SD2
 #define MOTOR_ENABLE1 16
 #define MOTOR_ENABLE2 0
-#define MOTOR_PWM 10
+#define MOTOR_PWM 15
 
 // Color definitions
 #define BLACK 0x0000
@@ -46,22 +59,21 @@
 #define MIN_VAL 3
 #define MAX_VAL 1023
 
-#include <Adafruit_GFX.h>
-#include <Adafruit_SSD1331.h>
-#include <SPI.h>
-
+ESP8266WebServer server(80);
 Adafruit_SSD1331 display = Adafruit_SSD1331(OLED_CS, OLED_DC, OLED_RST);
 unsigned long clickCounter = 0;
 unsigned long intervalClicks = 0;
 unsigned long rpmCounter;
 int val = 0;
 int perc = 0;
-int curPerc = 0;
+int curPerc = 100;
+int motorMode = 0;
 
 // redraw interval
 long startTime = 0;
 long curTime = 0;
 long lastRpmCheck = 0;
+long lastMotorCheck = 0;
 
 // switch press
 int state = LOW;
@@ -69,28 +81,82 @@ int reading;
 int prevState = HIGH;
 long lastTime = 0;
 
+// button presses
+int but1State = LOW;
+int but1Reading;
+int but1PrevState = HIGH;
+long but1LastTime = 0;
+int but2State = LOW;
+int but2Reading;
+int but2PrevState = HIGH;
+long but2LastTime = 0;
+
 void updateRpm();
 void updateClicks();
 void checkSwitch();
-void checkPotentiometer();
+void checkButtons();
 void updateClicks();
-void updatePercentBar();
+void updateMotorSpeed();
+void changeMotor();
+void handleStatus();
+void handleNotFound();
 
 void setup()
 {
-  Serial.begin(9600);
-
-  // potentiometer
-  pinMode(A0, INPUT);
+  Serial.begin(19200);
 
   // switch
   pinMode(MX_PIN, INPUT);
 
+  // buttons
+  pinMode(BUT1, INPUT_PULLUP);
+  pinMode(BUT2, INPUT_PULLUP);
+
   // motor driver
+  pinMode(MOTOR_PWM, OUTPUT);
   pinMode(MOTOR_ENABLE1, OUTPUT);
   pinMode(MOTOR_ENABLE2, OUTPUT);
 
   display.begin();
+  display.fillScreen(BLACK);
+  display.setTextColor(WHITE);
+  display.setTextSize(1);
+
+  // wifi
+  WiFi.mode(WIFI_STA);
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+
+  display.setCursor(10, 5);
+  display.print(WIFI_SSID);
+  display.setCursor(10, 15);
+  display.print("Connecting...");
+  while (WiFi.status() != WL_CONNECTED)
+  {
+    display.setCursor(10, 15);
+    display.print("Connecting   ");
+    delay(250);
+    display.setCursor(10, 15);
+    display.print("Connecting...");
+    delay(250);
+  }
+
+  display.fillScreen(BLACK);
+  display.setCursor(10, 5);
+  display.print("Connected:");
+  display.setCursor(10, 15);
+  display.print(WiFi.localIP());
+
+  if (MDNS.begin("esp8266"))
+  {
+    Serial.println("MDNS responder started");
+  }
+
+  server.on("/status", handleStatus);
+  server.onNotFound(handleNotFound);
+  server.begin();
+
+  delay(1000);
+
   display.fillScreen(BLACK);
   display.drawRect(0, 0, 96, 64, WHITE);
 
@@ -103,18 +169,26 @@ void setup()
   display.setTextSize(1);
   display.print("Rpm:");
 
+  display.setCursor(10, 50);
+  display.print(WiFi.localIP());
+
+  analogWrite(MOTOR_PWM, 0);
+  digitalWrite(MOTOR_ENABLE1, HIGH);
+  digitalWrite(MOTOR_ENABLE2, LOW);
+
+  updateMotorSpeed();
   updateClicks();
   updateRpm();
 }
 
 void loop()
 {
+  server.handleClient();
   curTime = millis();
 
   if (curTime - startTime > 100)
   {
-    checkPotentiometer();
-    updatePercentBar();
+    updateMotorSpeed();
     startTime = millis();
   }
 
@@ -127,8 +201,38 @@ void loop()
   }
 
   checkSwitch();
+  checkButtons();
+  // changeMotor();
 
-  delay(10);
+  // delay(10);
+}
+
+void changeMotor()
+{
+  Serial.println("Changing motor...");
+  if (millis() - lastMotorCheck > 2000)
+  {
+    motorMode++;
+    if (motorMode > 1)
+      motorMode = 0;
+
+    Serial.print("New motor mode: ");
+    Serial.println(motorMode);
+    if (motorMode == 0)
+    {
+      Serial.println("Dir");
+      digitalWrite(MOTOR_ENABLE1, HIGH);
+      digitalWrite(MOTOR_ENABLE2, LOW);
+    }
+    if (motorMode == 1)
+    {
+      Serial.println("Stop");
+      digitalWrite(MOTOR_ENABLE1, LOW);
+      digitalWrite(MOTOR_ENABLE2, LOW);
+    }
+
+    lastMotorCheck = millis();
+  }
 }
 
 void updateRpm()
@@ -172,21 +276,59 @@ void checkSwitch()
   }
 }
 
-void checkPotentiometer()
+void checkButtons()
 {
-  val = analogRead(A0);
-  if (val < MIN_VAL)
+  but1Reading = digitalRead(BUT1);
+  but2Reading = digitalRead(BUT2);
+
+  if (but1Reading == LOW && but1PrevState == HIGH && millis() - but1LastTime > BUT_DEBOUNCE)
   {
-    val = MIN_VAL;
+    if (but1Reading == LOW)
+    {
+      but1State = HIGH;
+    }
+    else
+    {
+      but1State = LOW;
+    }
+    but1LastTime = millis();
   }
-  if (val > MAX_VAL)
+
+  if (but2Reading == LOW && but2PrevState == HIGH && millis() - but2LastTime > BUT_DEBOUNCE)
   {
-    val = MAX_VAL;
+    if (but2Reading == LOW)
+    {
+      but2State = HIGH;
+    }
+    else
+    {
+      but2State = LOW;
+    }
+    but2LastTime = millis();
   }
-  perc = (val - MIN_VAL) * 100 / (MAX_VAL - MIN_VAL);
+
+  if (but1State == HIGH)
+  {
+    Serial.println("But1 Pressed");
+    perc = perc - 10;
+    if (perc < 0)
+      perc = 0;
+    updateMotorSpeed();
+    return;
+  }
+
+  if (but2State == HIGH)
+  {
+    Serial.println("but2 Pressed");
+    perc = perc + 10;
+    if (perc > 100)
+      perc = 100;
+    updateMotorSpeed();
+    return;
+  }
 }
 
-void updatePercentBar()
+void updateMotorSpeed()
 {
   if (curPerc != perc)
   {
@@ -194,5 +336,25 @@ void updatePercentBar()
     display.fillRect(5, 30, 86, 10, BLACK);
     display.drawRect(5, 30, 86, 10, WHITE);
     display.fillRect(5, 30, 86 * ((float)perc / 100), 10, WHITE);
+    Serial.print("Setting PWM to ");
+    Serial.println(PWMRANGE * ((float)perc / 100));
+    analogWrite(MOTOR_PWM, PWMRANGE * ((float)perc / 100));
   }
+}
+
+void handleStatus()
+{
+  String message = "{";
+  message += "\"rpm\":";
+  message += rpmCounter;
+  message += ",";
+  message += "\"clicks\":";
+  message += clickCounter;
+  message += "}";
+  server.send(200, "application/json", message);
+}
+
+void handleNotFound()
+{
+  server.send(404, "application/json", "{\"error\":\"Not found\"}");
 }
