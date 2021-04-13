@@ -1,0 +1,25 @@
+{
+	"folders": [
+		{
+			"path": "../../../../Downloads/SwitchBreaker"
+		},
+		{
+			"name": "210411-151143-esp07s",
+			"path": "."
+		}
+	],
+	"settings": {
+		"files.associations": {
+			".autotermrc": "ini",
+			".env": "ini",
+			"__bit_reference": "cpp",
+			"__string": "cpp",
+			"algorithm": "cpp",
+			"deque": "cpp",
+			"filesystem": "cpp",
+			"string": "cpp",
+			"string_view": "cpp",
+			"*.tcc": "cpp"
+		}
+	}
+}

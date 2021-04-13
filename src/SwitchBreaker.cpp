@@ -32,7 +32,7 @@
 
 // MX Switch - D4
 #define MX_PIN 2
-#define MX_DEBOUNCE 100
+#define MX_DEBOUNCE 200
 
 // Motor Controller L293D
 // Enable pins D0 and D3
@@ -92,18 +92,19 @@ int but2PrevState = HIGH;
 long but2LastTime = 0;
 
 void updateRpm();
-void updateClicks();
 void checkSwitch();
 void checkButtons();
 void updateClicks();
 void updateMotorSpeed();
 void changeMotor();
+void handleIndex();
 void handleStatus();
 void handleNotFound();
+void banner(String text, int x, int y, int wx, int wy, int fgcolor, int bgcolor);
 
 void setup()
 {
-  Serial.begin(19200);
+  Serial.begin(9600);
 
   // switch
   pinMode(MX_PIN, INPUT);
@@ -151,6 +152,7 @@ void setup()
     Serial.println("MDNS responder started");
   }
 
+  server.on("/", handleIndex);
   server.on("/status", handleStatus);
   server.onNotFound(handleNotFound);
   server.begin();
@@ -160,15 +162,16 @@ void setup()
   display.fillScreen(BLACK);
   display.drawRect(0, 0, 96, 64, WHITE);
 
-  display.setCursor(10, 5);
-  display.setTextColor(WHITE);
-  display.setTextSize(1);
-  display.print("Clicks:");
+  // display.setCursor(10, 5);
+  // display.setTextColor(WHITE);
+  // display.setTextSize(1);
+  // display.print("Clicks:");
 
-  display.setCursor(10, 15);
-  display.setTextSize(1);
-  display.print("Rpm:");
+  // display.setCursor(10, 15);
+  // display.setTextSize(1);
+  // display.print("Rpm:");
 
+  display.setTextSize(1);
   display.setCursor(10, 50);
   display.print(WiFi.localIP());
 
@@ -237,22 +240,16 @@ void changeMotor()
 
 void updateRpm()
 {
-  display.fillRect(RPM_X, RPM_Y, 30, 10, BLACK);
-  display.setCursor(RPM_X, RPM_Y);
-  display.setTextColor(RED);
   char rpm[5];
   sprintf(rpm, "%lu", rpmCounter);
-  display.print(rpm);
+  banner(rpm, 9, 4, 30, 12, WHITE, RED);
 }
 
 void updateClicks()
 {
-  display.fillRect(CLK_X, CLK_Y, 30, 10, BLACK);
-  display.setCursor(CLK_X, CLK_Y);
-  display.setTextColor(YELLOW);
   char clicks[5];
   sprintf(clicks, "%lu", clickCounter);
-  display.print(clicks);
+  banner(clicks, 45, 4, 45, 12, BLACK, YELLOW);
 }
 
 void checkSwitch()
@@ -276,6 +273,9 @@ void checkSwitch()
   }
 }
 
+int but1Pressed = 0;
+int but2Pressed = 0;
+
 void checkButtons()
 {
   but1Reading = digitalRead(BUT1);
@@ -286,6 +286,7 @@ void checkButtons()
     if (but1Reading == LOW)
     {
       but1State = HIGH;
+      but1Pressed = 1;
     }
     else
     {
@@ -299,6 +300,7 @@ void checkButtons()
     if (but2Reading == LOW)
     {
       but2State = HIGH;
+      but2Pressed = 1;
     }
     else
     {
@@ -307,8 +309,9 @@ void checkButtons()
     but2LastTime = millis();
   }
 
-  if (but1State == HIGH)
+  if (but1Pressed == 1)
   {
+    but1Pressed = 0;
     Serial.println("But1 Pressed");
     perc = perc - 10;
     if (perc < 0)
@@ -317,8 +320,9 @@ void checkButtons()
     return;
   }
 
-  if (but2State == HIGH)
+  if (but2Pressed == 1)
   {
+    but2Pressed = 0;
     Serial.println("but2 Pressed");
     perc = perc + 10;
     if (perc > 100)
@@ -344,17 +348,85 @@ void updateMotorSpeed()
 
 void handleStatus()
 {
+  if (server.args() > 0)
+  {
+    perc = server.arg("speed").toInt();
+  }
+
   String message = "{";
   message += "\"rpm\":";
   message += rpmCounter;
   message += ",";
   message += "\"clicks\":";
   message += clickCounter;
+  message += ",";
+  message += "\"speed\":";
+  message += perc;
   message += "}";
   server.send(200, "application/json", message);
 }
 
 void handleNotFound()
 {
-  server.send(404, "application/json", "{\"error\":\"Not found\"}");
+  String message = "File Not Found\n\n";
+  message += "URI: ";
+  message += server.uri();
+  message += "\nMethod: ";
+  message += (server.method() == HTTP_GET) ? "GET" : "POST";
+  message += "\nArguments: ";
+  message += server.args();
+  message += "\n";
+  for (uint8_t i = 0; i < server.args(); i++)
+  {
+    message += " " + server.argName(i) + ": " + server.arg(i) + "\n";
+  }
+  server.send(404, "text/plain", message);
+}
+
+void handleIndex()
+{
+  if (server.args() > 0)
+  {
+    if (server.arg("cmd") == "start")
+    {
+      perc = 100;
+    }
+    if (server.arg("cmd") == "stop")
+    {
+      perc = 0;
+    }
+  }
+
+  String message = "<h1><a href=\"/?cmd=start\">Start</a> | ";
+  message += "<a href=\"/?cmd=stop\">Stop</a></h1> | ";
+  message += "<a href=\"/status\">Status</a></h1>";
+  message += "<p>RPM: ";
+  message += rpmCounter;
+  message += "<br/>Clicks: ";
+  message += clickCounter;
+  message += "</p>";
+  server.send(200, "text/html", message);
+}
+
+void banner(String text, int x, int y, int wx, int wy, int fgcolor, int bgcolor)
+{
+
+  int16_t x1, y1;
+  uint16_t w, h;
+  int len = text.length() + 1;
+  char char_array[len];
+  text.toCharArray(char_array, len);
+  display.getTextBounds(char_array, x, y, &x1, &y1, &w, &h);
+
+  int midx = x + (wx / 2);
+  int midy = y + (wy / 2);
+  int tx = midx - (w / 2);
+  int ty = midy - (h / 2);
+
+  display.fillRect(x, y, wx, wy, bgcolor);
+  display.setTextColor(fgcolor);
+  display.setCursor(tx, ty);
+  display.print(text);
+  display.setCursor(tx + 1, ty);
+  display.print(text);
 }
