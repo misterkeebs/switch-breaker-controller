@@ -80,6 +80,10 @@ void clearScreen() {
   display.fillScreen(BLACK);
 }
 
+void clearArea(int x, int y, int w, int h, int color) {
+  display.fillRect(x, y, w, h, color);
+}
+
 void displayLogo() {
   display.fillScreen(DKBLUE);
   display.drawBitmap(0, 0, logo, 96, 64, BLACK);
@@ -102,7 +106,7 @@ void displayLogo() {
   display.print("MrBreaker");
 }
 
-void writeSmall(String text, int x, int y, int color) {
+void writeSmall(int x, int y, String text, int color) {
   display.setTextColor(color);
   display.setTextSize(1);
   display.setCursor(x, y);

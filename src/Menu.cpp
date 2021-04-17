@@ -15,10 +15,17 @@ String menuItems[][3] = {
   { "Motor", "< Back" }
 };
 
+String menuTitles[] = {
+  "Main Menu", "Start", "Setup"
+};
+
 void drawMenu() {
   if (curMenu < 0) return;
   if (curActiveItem == activeItem) return;
   if (activeItem < 0) activeItem = 0;
+
+  clearArea(0, 0, 96, 15, BLACK);
+  writeSmall(0, 0, menuTitles[curMenu], YELLOW);
 
   int y = 15;
   for (int i = 0; i < NUMITEMS(menuItems); i++) {

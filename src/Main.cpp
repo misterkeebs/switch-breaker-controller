@@ -114,7 +114,7 @@ void handleButton(int num) {
 }
 
 void drawScreen() {
-  writeSmall(getSelectedItem(), 0, 0, WHITE);
+  writeSmall(0, 0, getSelectedItem(), WHITE);
 }
 
 
