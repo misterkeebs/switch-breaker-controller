@@ -10,13 +10,13 @@ int curActiveItem = -1;
 int curMenu = MENU_MAIN;
 
 String menuItems[][3] = {
-  { "Start", "Setup", "About" },
+  { "Break In", "Setup", "About" },
   { "Manual", "Program Cycle", "< Back" },
   { "Motor", "< Back" }
 };
 
 String menuTitles[] = {
-  "Main Menu", "Start", "Setup"
+  "Main Menu", "Break In", "Setup"
 };
 
 void drawMenu() {
@@ -50,7 +50,7 @@ bool handleMenuSelection(int num) {
   if (curMenu < 0) return false;
   if (num == 1) {
     String item = getSelectedItem();
-    if (item == "Start") {
+    if (item == "Break In") {
       activeItem = -1;
       curMenu = MENU_START;
       return true;
