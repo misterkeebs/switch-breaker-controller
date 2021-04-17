@@ -32,7 +32,7 @@
 
 // MX Switch - D4
 #define MX_PIN 2
-#define MX_DEBOUNCE 200
+#define MX_DEBOUNCE 300
 
 // Motor Controller L293D
 // Enable pins D0 and D3
@@ -40,6 +40,9 @@
 #define MOTOR_ENABLE1 16
 #define MOTOR_ENABLE2 0
 #define MOTOR_PWM 15
+#define MOTOR_STOPPED 0
+#define MOTOR_FORWARD 1
+#define MOTOR_BACWARD 2
 
 // Color definitions
 #define BLACK 0x0000
@@ -91,10 +94,14 @@ int but2Reading;
 int but2PrevState = HIGH;
 long but2LastTime = 0;
 
+// motor direction
+int motorDirection = MOTOR_FORWARD;
+
 void updateRpm();
 void checkSwitch();
 void checkButtons();
 void updateClicks();
+void updateMotorDirection();
 void updateMotorSpeed();
 void changeMotor();
 void handleIndex();
@@ -162,26 +169,41 @@ void setup()
   display.fillScreen(BLACK);
   display.drawRect(0, 0, 96, 64, WHITE);
 
-  // display.setCursor(10, 5);
-  // display.setTextColor(WHITE);
-  // display.setTextSize(1);
-  // display.print("Clicks:");
-
-  // display.setCursor(10, 15);
-  // display.setTextSize(1);
-  // display.print("Rpm:");
-
   display.setTextSize(1);
   display.setCursor(10, 50);
   display.print(WiFi.localIP());
 
   analogWrite(MOTOR_PWM, 0);
-  digitalWrite(MOTOR_ENABLE1, HIGH);
-  digitalWrite(MOTOR_ENABLE2, LOW);
 
+  updateMotorDirection();
   updateMotorSpeed();
   updateClicks();
   updateRpm();
+}
+
+void updateMotorDirection()
+{
+  if (motorDirection == MOTOR_FORWARD)
+  {
+    digitalWrite(MOTOR_ENABLE1, HIGH);
+    digitalWrite(MOTOR_ENABLE2, LOW);
+  }
+  else if (motorDirection == MOTOR_BACWARD)
+  {
+    digitalWrite(MOTOR_ENABLE1, LOW);
+    digitalWrite(MOTOR_ENABLE2, HIGH);
+  }
+  else
+  {
+    digitalWrite(MOTOR_ENABLE1, LOW);
+    digitalWrite(MOTOR_ENABLE2, LOW);
+  }
+}
+
+void setMotorDirection(int dir)
+{
+  motorDirection = dir;
+  updateMotorDirection();
 }
 
 void loop()
@@ -395,6 +417,17 @@ void handleIndex()
     {
       perc = 0;
     }
+    if (server.arg("cmd") == "reverse")
+    {
+      if (motorDirection == MOTOR_BACWARD)
+      {
+        setMotorDirection(MOTOR_FORWARD);
+      }
+      else if (motorDirection == MOTOR_FORWARD)
+      {
+        setMotorDirection(MOTOR_BACWARD);
+      }
+    }
   }
 
   String message = "<h1><a href=\"/?cmd=start\">Start</a> | ";
@@ -408,7 +441,7 @@ void handleIndex()
   server.send(200, "text/html", message);
 }
 
-void banner(String text, int x, int y, int wx, int wy, int fgcolor, int bgcolor)
+void banner(String text, int x, int y, int xw, int yh, int fgcolor, int bgcolor)
 {
 
   int16_t x1, y1;
@@ -418,12 +451,12 @@ void banner(String text, int x, int y, int wx, int wy, int fgcolor, int bgcolor)
   text.toCharArray(char_array, len);
   display.getTextBounds(char_array, x, y, &x1, &y1, &w, &h);
 
-  int midx = x + (wx / 2);
-  int midy = y + (wy / 2);
+  int midx = x + (xw / 2);
+  int midy = y + (yh / 2);
   int tx = midx - (w / 2);
   int ty = midy - (h / 2);
 
-  display.fillRect(x, y, wx, wy, bgcolor);
+  display.fillRect(x, y, xw, yh, bgcolor);
   display.setTextColor(fgcolor);
   display.setCursor(tx, ty);
   display.print(text);

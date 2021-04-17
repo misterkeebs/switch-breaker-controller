@@ -19,7 +19,9 @@
 			"filesystem": "cpp",
 			"string": "cpp",
 			"string_view": "cpp",
-			"*.tcc": "cpp"
-		}
+			"*.tcc": "cpp",
+			"ostream": "cpp"
+		},
+		"C_Cpp.formatting": "Disabled"
 	}
 }
