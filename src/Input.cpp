@@ -20,6 +20,52 @@ int but2Pressed = 0;
 bool was1Pressed = false;
 bool was2Pressed = false;
 
+int mxReading;
+long mxLastTime = 0;
+long clickCounter = 0;
+long intervalClickCounter = 0;
+long rpmCounter = 0;
+long rpmLastTime = 0;
+
+void checkSwitch() {
+  mxReading = digitalRead(MX_PIN);
+  if (mxReading == LOW && millis() - mxLastTime > MX_DEBOUNCE) {
+    Serial.println("MX Pressed");
+    clickCounter += 1;
+    intervalClickCounter += 1;
+    mxLastTime = millis();
+  }
+  updateRpm();
+}
+
+long getRpm() {
+  return rpmCounter;
+}
+
+void updateRpm() {
+  if (millis() - rpmLastTime > 1000) {
+    rpmCounter = intervalClickCounter / 2 * 60;
+    resetIntervalClicks();
+    rpmLastTime = millis();
+  }
+}
+
+long getClicks() {
+  return clickCounter;
+}
+
+void resetClicks() {
+  clickCounter = 0;
+}
+
+long getIntervalClicks() {
+  return intervalClickCounter;
+}
+
+void resetIntervalClicks() {
+  intervalClickCounter = 0;
+}
+
 void checkButtons()
 {
   but1Reading = digitalRead(BUT1);
@@ -89,6 +135,6 @@ bool wasButton2Pressed() {
 };
 
 void handleButton(int num) {
-  if (num = 1) was1Pressed = true;
-  if (num = 2) was2Pressed = true;
+  if (num == 1) was1Pressed = true;
+  if (num == 2) was2Pressed = true;
 }

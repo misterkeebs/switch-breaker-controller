@@ -11,6 +11,7 @@
 #include <Colors.h>
 #include <Gfx.h>
 #include <Menu.h>
+#include <Motors.h>
 #include <Screens.h>
 
 #include "Screen.cpp"
@@ -31,12 +32,23 @@ void setup()
   pinMode(BUT1, INPUT_PULLUP);
   pinMode(BUT2, INPUT_PULLUP);
 
-  curScreen = getScreen(SCR_LOGO);
+  // MX switch (click counter)
+  pinMode(MX_PIN, INPUT);
+
+  // motor driver
+  // motor driver
+  pinMode(MOTOR_PWM, OUTPUT);
+  pinMode(MOTOR_ENABLE1, OUTPUT);
+  pinMode(MOTOR_ENABLE2, OUTPUT);
+
+  curScreen = getScreen(SCR_BREAKIN);
   clearScreen();
 }
 
 void loop() {
+  checkSwitch();
   checkButtons();
+
   Serial.println("Before drawing.");
   int newScreenId = curScreen->draw();
   Serial.print("Loading newScreen: ");

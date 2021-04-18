@@ -10,27 +10,38 @@
 
 #include "Screen.cpp"
 
+#define NUMITEMS(arg) (sizeof(arg) / sizeof(arg[0]))
+
 class MainMenu : public Screen {
   private:
     int curItem;
-    int lastCurItem;
+    int prevItem;
+    int lastItem;
+    String menuItems[3] = { "Break In", "Setup", "About" };
 
   public:
     MainMenu() : Screen() {
       curItem = 0;
-      lastCurItem = -1;
+      prevItem = -1;
+      lastItem = NUMITEMS(menuItems)-1;
     }
 
     int draw() override {
-      if (wasButton1Pressed()) {
-        Serial.println("Button 1 pressed");
+      if (wasButton2Pressed()) {
         curItem++;
+        if (curItem > lastItem) {
+          curItem = 0;
+        }
       }
 
-      if (curItem != lastCurItem) {
-        lastCurItem = curItem;
+      if (curItem != prevItem) {
+        if (prevItem == -1) {
+          clearScreen();
+        }
+
+        prevItem = curItem;
         String msg = "Item: ";
-        msg += curItem;
+        msg += menuItems[curItem];
 
         banner(msg, 0, 0, 96, 12, 0, BLACK, WHITE);
 

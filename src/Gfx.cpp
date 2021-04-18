@@ -85,6 +85,10 @@ void clearArea(int x, int y, int w, int h, int color) {
   display.fillRect(x, y, w, h, color);
 }
 
+void box(int x, int y, int w, int h, int color) {
+  display.drawRect(x, y, w, h, color);
+}
+
 void displayLogo() {
   display.fillScreen(DKBLUE);
   display.drawBitmap(0, 0, logo, 96, 64, BLACK);
