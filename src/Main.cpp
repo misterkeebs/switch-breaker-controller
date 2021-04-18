@@ -11,27 +11,36 @@
 #include <Colors.h>
 #include <Gfx.h>
 #include <Menu.h>
+#include <Screens.h>
+
+#include "Screen.cpp"
+#include "MainMenu.cpp"
+#include "LogoScreen.cpp"
+
+Screen *curScreen;
 
 void draw();
 
 void setup()
 {
-  // Serial.begin(9600);
+  Serial.begin(9600);
+  delay(1000);
   initScreen();
 
   // buttons
   pinMode(BUT1, INPUT_PULLUP);
   pinMode(BUT2, INPUT_PULLUP);
 
-  displayLogo();
+  curScreen = getScreen(SCR_LOGO);
   clearScreen();
 }
 
 void loop() {
   checkButtons();
-  draw();
-}
-
-void draw() {
-  drawMenu();
+  Serial.println("Before drawing.");
+  int newScreenId = curScreen->draw();
+  Serial.print("Loading newScreen: ");
+  Serial.print(newScreenId);
+  Serial.print("... ");
+  curScreen = getScreen(newScreenId);
 }

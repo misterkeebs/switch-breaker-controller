@@ -5,3 +5,6 @@
 
 void checkButtons();
 void handleButton(int num);
+bool wasAnyPuttonPressed();
+bool wasButton1Pressed();
+bool wasButton2Pressed();

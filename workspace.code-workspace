@@ -20,7 +20,8 @@
 			"string": "cpp",
 			"string_view": "cpp",
 			"*.tcc": "cpp",
-			"ostream": "cpp"
+			"ostream": "cpp",
+			"typeinfo": "cpp"
 		},
 		"C_Cpp.formatting": "Disabled"
 	}

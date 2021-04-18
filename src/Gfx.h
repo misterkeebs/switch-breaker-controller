@@ -1,3 +1,5 @@
+#include <Arduino.h>
+
 // OLED Mapping
 // GND - GND
 // VCC - 3.3V

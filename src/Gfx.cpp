@@ -1,3 +1,4 @@
+#include <Arduino.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1331.h>
 
@@ -96,14 +97,14 @@ void displayLogo() {
   banner("v1.0", 0, 30, 96, 10, 0, WHITE, BLACK);
   delay(2000);
 
-  display.fillScreen(BLACK);
-  display.setTextColor(BLACK);
-  display.setTextSize(1);
-  display.fillRect(0, 0, 96, 12, WHITE);
-  display.setCursor(2, 1);
-  display.print("MrBreaker");
-  display.setCursor(3, 1);
-  display.print("MrBreaker");
+  // display.fillScreen(BLACK);
+  // display.setTextColor(BLACK);
+  // display.setTextSize(1);
+  // display.fillRect(0, 0, 96, 12, WHITE);
+  // display.setCursor(2, 1);
+  // display.print("MrBreaker");
+  // display.setCursor(3, 1);
+  // display.print("MrBreaker");
 }
 
 void writeSmall(int x, int y, String text, int color) {

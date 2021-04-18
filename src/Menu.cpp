@@ -42,6 +42,16 @@ void resetMenu() {
   curActiveItem = -1;
 }
 
+void showMenu(int menuId) {
+  curMenu = menuId;
+  curActiveItem = -1;
+}
+
+void setMainMenu() {
+  curMenu = MENU_MAIN;
+  curActiveItem = -1;
+}
+
 String getSelectedItem() {
   return menuItems[curMenu][activeItem];
 }

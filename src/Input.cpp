@@ -17,6 +17,9 @@ long but2LastTime = 0;
 int but1Pressed = 0;
 int but2Pressed = 0;
 
+bool was1Pressed = false;
+bool was2Pressed = false;
+
 void checkButtons()
 {
   but1Reading = digitalRead(BUT1);
@@ -65,10 +68,27 @@ void checkButtons()
   }
 }
 
-void handleButton(int num) {
-  if (!handleMenuSelection(num)) {
-    clearScreen();
-    resetMenu();
-    drawScreen();
+bool wasAnyPuttonPressed() {
+  return wasButton1Pressed() || wasButton2Pressed();
+}
+
+bool wasButton1Pressed() {
+  if (was1Pressed) {
+    was1Pressed = false;
+    return true;
   }
+  return false;
+};
+
+bool wasButton2Pressed() {
+  if (was2Pressed) {
+    was2Pressed = false;
+    return true;
+  }
+  return false;
+};
+
+void handleButton(int num) {
+  if (num = 1) was1Pressed = true;
+  if (num = 2) was2Pressed = true;
 }

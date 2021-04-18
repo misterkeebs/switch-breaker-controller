@@ -9,3 +9,5 @@ void drawMenu();
 void resetMenu();
 String getSelectedItem();
 bool handleMenuSelection(int num);
+void setMainMenu();
+void showMenu(int menu);
