@@ -46,29 +46,34 @@ class BreakIn : public Screen {
 
       if (isMotorRunning()) {
         banner("O=Pause", 2, 50, 46, 12, 1, DKGRAY, LTGRAY);
-        banner("X=Stop", 49, 50, 45, 12, 1, DKGRAY, LTGRAY);
+        banner("X=Menu", 49, 50, 45, 12, 1, DKGRAY, LTGRAY);
       } else {
         banner("O=Start", 2, 50, 46, 12, 1, DKGRAY, LTGRAY);
-        banner("X=Back", 49, 50, 45, 12, 1, DKGRAY, LTGRAY);
+        banner("X=Menu", 49, 50, 45, 12, 1, DKGRAY, LTGRAY);
       }
     }
 
     int draw() override {
       if (!init) {
-        init = true;
+        clearScreen();
         box(0, 0, 96, 64, WHITE);
+      }
+
+      if (wasButton2Pressed()) {
+        init = false;
+        return SCR_BREAKIN_MENU;
       }
 
       if (wasButton1Pressed()) {
         toggleMotor();
       }
 
-      if (curPotReading != getPotReading()) {
+      if (!init || curPotReading != getPotReading()) {
         curPotReading = getPotReading();
         setMotorSpeed(map(curPotReading, 0, PWMRANGE, 0, 10));
       }
 
-      if (curMotorRunning != isMotorRunning()
+      if (!init || curMotorRunning != isMotorRunning()
           || curMotorDirection != getMotorDirection()
           || curMotorSpeed != getMotorSpeed()) {
         updateMotorStatus();
@@ -77,14 +82,14 @@ class BreakIn : public Screen {
       curRpm = getRpm();
       curClicks = getClicks();
 
-      if (curRpm != prevRpm) {
+      if (curRpm != prevRpm || !init) {
         prevRpm = curRpm;
         char rpm[5];
         sprintf(rpm, "%lu", curRpm);
         banner(rpm, 9, 4, 30, 12, 1, WHITE, RED);
       }
 
-      if (curClicks != prevClicks) {
+      if (curClicks != prevClicks || !init) {
         prevClicks = curClicks;
         char clicks[6];
         sprintf(clicks, "%lu", curClicks);
@@ -96,12 +101,13 @@ class BreakIn : public Screen {
         runningTime += elapsed;
       }
 
-      if (millis() - lastTime > 1000) {
+      if (millis() - lastTime > 1000 || !init) {
         lastTime = millis();
         banner(formatMillis(runningTime), 5, 30, 86, 12, 0, YELLOW, BLACK);
       }
 
       lastCycle = millis();
+      init = true;
       return SCR_BREAKIN;
     }
 };
