@@ -14,6 +14,8 @@ bool motorDirection = MOTOR_FORWARD;
 int curMotorSpeed = -1;
 int motorSpeed = 0; // 0-10
 
+long programCycle = -1;
+
 void updateMotor() {
   bool changed = false;
 
@@ -83,4 +85,8 @@ void setMotorSpeed(int speed) {
   if (speed < 0) speed = 0;
 
   motorSpeed = speed;
+}
+
+void setProgramCycle(long keystrokes) {
+  programCycle = keystrokes;
 }

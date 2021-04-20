@@ -6,10 +6,12 @@
 #include <LogoScreen.cpp>
 #include <BreakIn.cpp>
 #include <BreakInMenu.cpp>
+#include <Program.cpp>
 
 LogoScreen logo{};
 BreakIn breakIn{};
 BreakInMenu breakInMenu{};
+Program program{};
 
 Screen* getScreen(int id) {
   if (id == SCR_LOGO) {
@@ -21,5 +23,8 @@ Screen* getScreen(int id) {
   }
   if (id == SCR_BREAKIN_MENU) {
     return &breakInMenu;
+  }
+  if (id == SCR_PROGRAM) {
+    return &program;
   }
 }

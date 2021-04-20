@@ -11,7 +11,7 @@ private:
   int selectedItem = 0;
   int curSelectedItem = -1;
   bool init = false;
-  String items[2] = {"Reverse", "< Back"};
+  String items[3] = {"Reverse", "Program", "< Back"};
 
 public:
   BreakInMenu() : Screen()
@@ -37,13 +37,16 @@ public:
       if (selectedItem == 0) {
         toggleMotorDirection();
       }
+      if (selectedItem == 1) {
+        return SCR_PROGRAM;
+      }
       reset();
       return SCR_BREAKIN;
     }
 
     if (wasButton2Pressed()) {
       selectedItem++;
-      if (selectedItem > 1) selectedItem = 0;
+      if (selectedItem > 2) selectedItem = 0;
     }
 
     if (curSelectedItem == selectedItem) return SCR_BREAKIN_MENU;

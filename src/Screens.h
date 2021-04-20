@@ -8,6 +8,7 @@
 #define SCR_MAINMENU 2
 #define SCR_BREAKIN 3
 #define SCR_BREAKIN_MENU 4
+#define SCR_PROGRAM 5
 
 Screen* getScreen(int id);
 
