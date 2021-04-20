@@ -22,16 +22,27 @@ class BreakIn : public Screen {
     bool curMotorRunning = false;
     int curMotorSpeed = -1;
     bool curMotorDirection = MOTOR_BACKWARD;
+    long runningTime = 0;
+    long elapsed;
+    long lastCycle = 0;
+    int curPotReading = -1;
 
   public:
     BreakIn() : Screen() {
       startTime = millis();
+      lastCycle = millis();
     }
 
     int updateMotorStatus() {
       curMotorRunning = isMotorRunning();
       curMotorDirection = getMotorDirection();
       curMotorSpeed = getMotorSpeed();
+
+      String info = curMotorDirection ? ">" : "<";
+      info += " ";
+      info += curMotorSpeed;
+
+      banner(info, 5, 20, 86, 12, 0, YELLOW, BLACK);
 
       if (isMotorRunning()) {
         banner("O=Pause", 2, 50, 46, 12, 1, DKGRAY, LTGRAY);
@@ -46,6 +57,15 @@ class BreakIn : public Screen {
       if (!init) {
         init = true;
         box(0, 0, 96, 64, WHITE);
+      }
+
+      if (wasButton1Pressed()) {
+        toggleMotor();
+      }
+
+      if (curPotReading != getPotReading()) {
+        curPotReading = getPotReading();
+        setMotorSpeed(map(curPotReading, 0, PWMRANGE, 0, 10));
       }
 
       if (curMotorRunning != isMotorRunning()
@@ -71,11 +91,17 @@ class BreakIn : public Screen {
         banner(clicks, 45, 4, 45, 12, 1, BLACK, YELLOW);
       }
 
-      if (millis() - lastTime > 1000) {
-        lastTime = millis();
-        banner(formatMillis(millis() - startTime), 5, 25, 86, 12, 0, YELLOW, BLACK);
+      if (isMotorRunning()) {
+        elapsed = millis() - lastCycle;
+        runningTime += elapsed;
       }
 
+      if (millis() - lastTime > 1000) {
+        lastTime = millis();
+        banner(formatMillis(runningTime), 5, 30, 86, 12, 0, YELLOW, BLACK);
+      }
+
+      lastCycle = millis();
       return SCR_BREAKIN;
     }
 };

@@ -7,6 +7,7 @@
 #include <Adafruit_SSD1331.h>
 #include <SPI.h>
 
+#include <Pinout.h>
 #include <Input.h>
 #include <Colors.h>
 #include <Gfx.h>
@@ -36,7 +37,6 @@ void setup()
   pinMode(MX_PIN, INPUT);
 
   // motor driver
-  // motor driver
   pinMode(MOTOR_PWM, OUTPUT);
   pinMode(MOTOR_ENABLE1, OUTPUT);
   pinMode(MOTOR_ENABLE2, OUTPUT);
@@ -48,6 +48,8 @@ void setup()
 void loop() {
   checkSwitch();
   checkButtons();
+  checkPotentiometer();
+  updateMotor();
 
   Serial.println("Before drawing.");
   int newScreenId = curScreen->draw();

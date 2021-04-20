@@ -1,5 +1,9 @@
 #include <Arduino.h>
 #include <Motors.h>
+#include <Pinout.h>
+
+#include <Gfx.h>
+#include <Colors.h>
 
 bool curMotorRunning = true;
 bool motorRunning = false;
@@ -25,12 +29,24 @@ void updateMotor() {
 
   if (curMotorDirection != motorDirection) {
     curMotorDirection = motorDirection;
-    digitalWrite(MOTOR_ENABLE1, motorDirection ? HIGH : LOW);
-    digitalWrite(MOTOR_ENABLE2, motorDirection ? LOW : HIGH);
+    changed = true;
   }
 
   if (changed) {
     analogWrite(MOTOR_PWM, map(motorSpeed, 0, 10, PWMRANGE/2, PWMRANGE));
+    applyMotorDirection();
+  }
+}
+
+void applyMotorDirection() {
+  if (motorRunning) {
+    // banner("R+", 0, 0, 96, 12, 0, WHITE, BLACK);
+    digitalWrite(MOTOR_ENABLE1, motorDirection ? HIGH : LOW);
+    digitalWrite(MOTOR_ENABLE2, motorDirection ? LOW : HIGH);
+  } else {
+    // banner("R-", 0, 0, 96, 12, 0, WHITE, BLACK);
+    digitalWrite(MOTOR_ENABLE1, LOW);
+    digitalWrite(MOTOR_ENABLE2, LOW);
   }
 }
 
@@ -44,6 +60,10 @@ void startMotor() {
 
 void stopMotor() {
   motorRunning = false;
+}
+
+void toggleMotor() {
+  motorRunning = !motorRunning;
 }
 
 bool getMotorDirection() {

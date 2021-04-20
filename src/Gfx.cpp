@@ -4,6 +4,7 @@
 
 #include <Colors.h>
 #include <Gfx.h>
+#include <Pinout.h>
 
 Adafruit_SSD1331 display = Adafruit_SSD1331(OLED_CS, OLED_DC, OLED_RST);
 static const uint8_t PROGMEM logo[] = {

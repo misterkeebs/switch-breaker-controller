@@ -3,6 +3,7 @@
 #include <Gfx.h>
 #include <Input.h>
 #include <Menu.h>
+#include <Pinout.h>
 #include <Screens.h>
 
 // button presses
@@ -19,6 +20,9 @@ int but2Pressed = 0;
 
 bool was1Pressed = false;
 bool was2Pressed = false;
+
+int potReading = 0;
+int curPotReading = -1;
 
 int mxReading;
 long mxLastTime = 0;
@@ -64,6 +68,14 @@ long getIntervalClicks() {
 
 void resetIntervalClicks() {
   intervalClickCounter = 0;
+}
+
+void checkPotentiometer() {
+  potReading = analogRead(A0);
+}
+
+int getPotReading() {
+  return potReading;
 }
 
 void checkButtons()
