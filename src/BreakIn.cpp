@@ -36,6 +36,29 @@ class BreakIn : public Screen {
       lastCycle = millis();
     }
 
+    void reset() {
+      setProgramCycle(-1);
+      resetClicks();
+
+      curRpm = 0;
+      curClicks = 0;
+      prevRpm = -1;
+      prevClicks = -1;
+      startTime;
+      lastTime = 0;
+      init = false;
+      curMotorRunning = false;
+      curMotorSpeed = -1;
+      curMotorDirection = MOTOR_BACKWARD;
+      runningTime = 0;
+      elapsed;
+      lastCycle = 0;
+      curPotReading = -1;
+      lastDisplayToggle = -1;
+      forceClickDisplay = false;
+      displayPercent = false;
+    }
+
     int updateMotorStatus() {
       curMotorRunning = isMotorRunning();
       curMotorDirection = getMotorDirection();
@@ -121,6 +144,13 @@ class BreakIn : public Screen {
       if (millis() - lastTime > 1000 || !init) {
         lastTime = millis();
         banner(formatMillis(runningTime), 5, 30, 86, 12, 0, YELLOW, BLACK);
+      }
+
+      if (getProgramCycle() > -1 && curClicks >= getProgramCycle()) {
+        stopMotor();
+        reset();
+        curClicks = 0;
+        return displayMessage("Program Done!", SCR_BREAKIN);
       }
 
       lastCycle = millis();

@@ -1,5 +1,24 @@
 #include <Arduino.h>
 
+#include <Screens.h>
+
+String message;
+int returnTo;
+
+int displayMessage(String _message, int _returnTo) {
+  message = _message;
+  returnTo = _returnTo;
+  return SCR_MESSAGE;
+}
+
+String getMessage() {
+  return message;
+}
+
+int getReturnTo() {
+  return returnTo;
+}
+
 String formatMillis(long millis) {
   unsigned long seconds = millis / 1000;
   unsigned long minutes = seconds / 60;
