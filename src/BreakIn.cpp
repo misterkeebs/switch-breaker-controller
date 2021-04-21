@@ -64,6 +64,8 @@ class BreakIn : public Screen {
       curMotorDirection = getMotorDirection();
       curMotorSpeed = getMotorSpeed();
 
+      setCountingClicks(isMotorRunning());
+
       String info = curMotorDirection ? ">" : "<";
       info += " ";
       info += curMotorSpeed;

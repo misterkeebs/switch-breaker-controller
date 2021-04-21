@@ -30,8 +30,22 @@ long clickCounter = 0;
 long intervalClickCounter = 0;
 long rpmCounter = 0;
 long rpmLastTime = 0;
+bool countingClicks = false;
+
+void startCountingClicks() {
+  countingClicks = true;
+}
+
+void stopCountingClicks() {
+  countingClicks = false;
+}
+
+void setCountingClicks(bool enabled) {
+  countingClicks = enabled;
+}
 
 void checkSwitch() {
+  if (!countingClicks) return;
   mxReading = digitalRead(MX_PIN);
   if (mxReading == LOW && millis() - mxLastTime > MX_DEBOUNCE) {
     Serial.println("MX Pressed");
