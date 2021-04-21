@@ -38,6 +38,7 @@ public:
         toggleMotorDirection();
       }
       if (selectedItem == 1) {
+        reset();
         return SCR_PROGRAM;
       }
       reset();

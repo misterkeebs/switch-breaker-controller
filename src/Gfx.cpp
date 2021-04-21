@@ -143,3 +143,28 @@ void banner(String text, int x, int y, int xw, int yh, int bold, int fgcolor, in
   }
 }
 
+void bannerPerc(int percent, String text, int x, int y, int xw, int yh, int bold, int fgcolor, int pccolor, int bgcolor)
+{
+  int16_t x1, y1;
+  uint16_t w, h;
+  int len = text.length() + 1;
+  char char_array[len];
+  text.toCharArray(char_array, len);
+  display.getTextBounds(char_array, x, y, &x1, &y1, &w, &h);
+
+  int midx = x + (xw / 2);
+  int midy = y + (yh / 2);
+  int tx = midx - (w / 2);
+  int ty = midy - (h / 2);
+
+  display.fillRect(x, y, xw, yh, bgcolor);
+  display.fillRect(x, y, ((int) xw * ((float) percent / 100)), yh, pccolor);
+  display.setTextColor(fgcolor);
+  display.setCursor(tx, ty);
+  display.print(text);
+  if (bold == 1) {
+    display.setCursor(tx + 1, ty);
+    display.print(text);
+  }
+}
+

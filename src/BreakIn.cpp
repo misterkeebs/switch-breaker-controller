@@ -26,6 +26,9 @@ class BreakIn : public Screen {
     long elapsed;
     long lastCycle = 0;
     int curPotReading = -1;
+    long lastDisplayToggle = -1;
+    long forceClickDisplay = false;
+    bool displayPercent = false;
 
   public:
     BreakIn() : Screen() {
@@ -89,11 +92,25 @@ class BreakIn : public Screen {
         banner(rpm, 9, 4, 30, 12, 1, WHITE, RED);
       }
 
-      if (curClicks != prevClicks || !init) {
+      if (getProgramCycle() > -1 && (millis() - lastDisplayToggle) > (displayPercent ? 2000 : 5000)) {
+        lastDisplayToggle = millis();
+        forceClickDisplay = true;
+        displayPercent = !displayPercent;
+      }
+
+      if (curClicks != prevClicks || !init || forceClickDisplay) {
+        forceClickDisplay = false;
         prevClicks = curClicks;
         char clicks[6];
-        sprintf(clicks, "%lu", curClicks);
-        banner(clicks, 45, 4, 45, 12, 1, BLACK, YELLOW);
+        int perc = getProgramCycle() > -1
+          ? ((int) (curClicks / (float) getProgramCycle() * 100))
+          : 0;
+        if (displayPercent) {
+          sprintf(clicks, "%lu%%", perc);
+        } else {
+          sprintf(clicks, "%lu", curClicks);
+        }
+        bannerPerc(perc, clicks, 45, 4, 45, 12, 1, BLACK, RED, YELLOW);
       }
 
       if (isMotorRunning()) {

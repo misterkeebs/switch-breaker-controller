@@ -53,7 +53,7 @@ class Program : public Screen {
 
       if (curPotReading != getPotReading()) {
         curPotReading = getPotReading();
-        cycleAmount = map(curPotReading, 0, PWMRANGE, 0, 200);
+        cycleAmount = map(curPotReading, 0, PWMRANGE, 1, 200);
       }
 
       if (curCycleAmount != cycleAmount) {

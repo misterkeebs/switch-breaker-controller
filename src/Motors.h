@@ -12,3 +12,4 @@ void applyMotorDirection();
 int getMotorSpeed();
 void setMotorSpeed(int speed);
 void setProgramCycle(long keystrokes);
+long getProgramCycle();

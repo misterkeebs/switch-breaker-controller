@@ -90,3 +90,7 @@ void setMotorSpeed(int speed) {
 void setProgramCycle(long keystrokes) {
   programCycle = keystrokes;
 }
+
+long getProgramCycle() {
+  return programCycle;
+}

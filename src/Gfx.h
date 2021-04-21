@@ -16,3 +16,4 @@ void box(int x, int y, int w, int h, int color);
 void displayLogo();
 void writeSmall(int x, int y, String text, int color);
 void banner(String text, int x, int y, int wx, int wy, int bold, int fgcolor, int bgcolor);
+void bannerPerc(int percent, String text, int x, int y, int xw, int yh, int bold, int fgcolor, int pccolor, int bgcolor);
