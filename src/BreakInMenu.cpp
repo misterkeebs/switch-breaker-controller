@@ -45,8 +45,9 @@ public:
       return SCR_BREAKIN;
     }
 
-    if (wasButton2Pressed()) {
-      selectedItem++;
+    if (peekMoveDelta() != 0) {
+      selectedItem += getMoveDelta();
+      if (selectedItem < 0) selectedItem = 2;
       if (selectedItem > 2) selectedItem = 0;
     }
 

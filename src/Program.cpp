@@ -51,9 +51,10 @@ class Program : public Screen {
         return SCR_BREAKIN;
       }
 
-      if (curPotReading != getPotReading()) {
-        curPotReading = getPotReading();
-        cycleAmount = map(curPotReading, 0, PWMRANGE, 1, 200);
+      if (peekMoveDelta() != 0) {
+        cycleAmount += getMoveDelta();
+        if (cycleAmount > 200) cycleAmount = 200;
+        if (cycleAmount < 1) cycleAmount = 1;
       }
 
       if (curCycleAmount != cycleAmount) {

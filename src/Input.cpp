@@ -1,4 +1,7 @@
 #include <Arduino.h>
+#include <Adafruit_MCP23017.h>
+#include <Rotary.h>
+#include <RotaryEncOverMCP.h>
 
 #include <Gfx.h>
 #include <Input.h>
@@ -7,16 +10,16 @@
 #include <Screens.h>
 
 // button presses
-int but1State = LOW;
-int but1Reading;
-int but1PrevState = HIGH;
-long but1LastTime = 0;
-int but2State = LOW;
-int but2Reading;
-int but2PrevState = HIGH;
-long but2LastTime = 0;
+int pushButState = LOW;
+int curPushButState = -1;
+int rotButState = LOW;
+int curRotButState = -1;
+int pushButPressed = 0;
+int rotButPressed = 1;
 int but1Pressed = 0;
 int but2Pressed = 0;
+
+int moveDelta = 0;
 
 bool was1Pressed = false;
 bool was2Pressed = false;
@@ -32,6 +35,25 @@ long rpmCounter = 0;
 long rpmLastTime = 0;
 bool countingClicks = false;
 
+Adafruit_MCP23017 mcp;
+Adafruit_MCP23017 *mcpr = &mcp;
+RotaryEncOverMCP rotaryEncoder = RotaryEncOverMCP(&mcp, ROT_CLK, ROT_DT, &rotaryEncoderChanged);
+
+void initGPIOs() {
+  Wire.begin(D3, D2);
+  Wire.beginTransmission(0x20);
+  int res = Wire.endTransmission();
+  Serial.print("MCP Result: ");
+  Serial.println(res);
+
+  mcp.begin();
+  rotaryEncoder.init();
+
+  mcpr->pullUp(PUSH_BUT, 1);
+  mcpr->pinMode(PUSH_BUT, INPUT);
+  mcpr->pinMode(ROT_SW, INPUT);
+}
+
 void startCountingClicks() {
   countingClicks = true;
 }
@@ -45,15 +67,15 @@ void setCountingClicks(bool enabled) {
 }
 
 void checkSwitch() {
-  if (!countingClicks) return;
-  mxReading = digitalRead(MX_PIN);
-  if (mxReading == LOW && millis() - mxLastTime > MX_DEBOUNCE) {
-    Serial.println("MX Pressed");
-    clickCounter += 1;
-    intervalClickCounter += 1;
-    mxLastTime = millis();
-  }
-  updateRpm();
+  // if (!countingClicks) return;
+  // mxReading = digitalRead(MX_PIN);
+  // if (mxReading == LOW && millis() - mxLastTime > MX_DEBOUNCE) {
+  //   Serial.println("MX Pressed");
+  //   clickCounter += 1;
+  //   intervalClickCounter += 1;
+  //   mxLastTime = millis();
+  // }
+  // updateRpm();
 }
 
 long getRpm() {
@@ -94,47 +116,38 @@ int getPotReading() {
 
 void checkButtons()
 {
-  but1Reading = digitalRead(BUT1);
-  but2Reading = digitalRead(BUT2);
+  rotaryEncoder.poll();
+  rotButState = mcpr->digitalRead(ROT_SW);
+  pushButState = mcpr->digitalRead(PUSH_BUT);
 
-  if (but1Reading == LOW && but1PrevState == HIGH && millis() - but1LastTime > BUT_DEBOUNCE)
-  {
-    if (but1Reading == LOW)
-    {
-      but1State = HIGH;
-      but1Pressed = 1;
+  if (curRotButState != rotButState) {
+    curRotButState = rotButState;
+    if (curRotButState == 0) {
+      Serial.print("Rotary button status = ");
+      Serial.println(curRotButState);
+      rotButPressed = 1;
     }
-    else
-    {
-      but1State = LOW;
-    }
-    but1LastTime = millis();
   }
 
-  if (but2Reading == LOW && but2PrevState == HIGH && millis() - but2LastTime > BUT_DEBOUNCE)
-  {
-    if (but2Reading == LOW)
-    {
-      but2State = HIGH;
-      but2Pressed = 1;
+  if (curPushButState != pushButState) {
+    curPushButState = pushButState;
+    if (curPushButState == 0) {
+      Serial.print("Push button status = ");
+      Serial.println(curPushButState);
+      pushButPressed = 1;
     }
-    else
-    {
-      but2State = LOW;
-    }
-    but2LastTime = millis();
   }
 
-  if (but1Pressed == 1)
+  if (rotButPressed == 1)
   {
-    but1Pressed = 0;
+    rotButPressed = 0;
     handleButton(1);
     return;
   }
 
-  if (but2Pressed == 1)
+  if (pushButPressed == 1)
   {
-    but2Pressed = 0;
+    pushButPressed = 0;
     handleButton(2);
     return;
   }
@@ -163,4 +176,20 @@ bool wasButton2Pressed() {
 void handleButton(int num) {
   if (num == 1) was1Pressed = true;
   if (num == 2) was2Pressed = true;
+}
+
+void rotaryEncoderChanged(bool antiClock, int id)
+{
+  Serial.println("Encoder " + String(id) + ": " + (antiClock ? String("left") : String("right")));
+  moveDelta += antiClock ? -1 : 1;
+}
+
+int peekMoveDelta() {
+  return moveDelta;
+}
+
+int getMoveDelta() {
+  int ret = moveDelta;
+  moveDelta = 0;
+  return ret;
 }

@@ -60,19 +60,22 @@
 //  9 - Button 2
 // 10 - Potentiometer
 
-// OLED
-#define OLED_SCLK 14 // SCK
-#define OLED_MOSI 13 // SDA
-#define OLED_RST 4   // RES
-#define OLED_DC 5    // DC
-#define OLED_CS 1    // CS
+/** OLED Screen pins */
+#define OLED_SCK D5
+#define OLED_SDA D7
+#define OLED_RST D6
+#define OLED_DC D8
+#define OLED_CS D0
+
+/** Push Button pin */
+#define PUSH_BUT 4
+
+/** Rotary encoder pins */
+#define ROT_CLK 5
+#define ROT_DT 6
+#define ROT_SW 7
 
 // Motor Controller L293D
 #define MOTOR_ENABLE1 16
 #define MOTOR_ENABLE2 0
 #define MOTOR_PWM 15
-
-// Buttons
-#define BUT1 3
-#define BUT2 10
-#define MX_PIN 2

@@ -26,19 +26,9 @@ void setup()
 {
   Serial.begin(9600);
   delay(1000);
+
+  initGPIOs();
   initScreen();
-
-  // buttons
-  pinMode(BUT1, INPUT_PULLUP);
-  pinMode(BUT2, INPUT_PULLUP);
-
-  // MX switch (click counter)
-  pinMode(MX_PIN, INPUT);
-
-  // motor driver
-  pinMode(MOTOR_PWM, OUTPUT);
-  pinMode(MOTOR_ENABLE1, OUTPUT);
-  pinMode(MOTOR_ENABLE2, OUTPUT);
 
   curScreen = getScreen(SCR_BREAKIN);
   clearScreen();
@@ -50,10 +40,10 @@ void loop() {
   checkPotentiometer();
   updateMotor();
 
-  Serial.println("Before drawing.");
+  // Serial.println("Before drawing.");
   int newScreenId = curScreen->draw();
-  Serial.print("Loading newScreen: ");
-  Serial.print(newScreenId);
-  Serial.print("... ");
+  // Serial.print("Loading newScreen: ");
+  // Serial.print(newScreenId);
+  // Serial.print("... ");
   curScreen = getScreen(newScreenId);
 }
