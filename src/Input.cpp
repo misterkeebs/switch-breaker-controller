@@ -24,9 +24,6 @@ int moveDelta = 0;
 bool was1Pressed = false;
 bool was2Pressed = false;
 
-int potReading = 0;
-int curPotReading = -1;
-
 int mxReading;
 long mxLastTime = 0;
 long clickCounter = 0;
@@ -104,14 +101,6 @@ long getIntervalClicks() {
 
 void resetIntervalClicks() {
   intervalClickCounter = 0;
-}
-
-void checkPotentiometer() {
-  potReading = analogRead(A0);
-}
-
-int getPotReading() {
-  return potReading;
 }
 
 void checkButtons()

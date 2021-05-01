@@ -17,9 +17,6 @@ long getRpm();
 void updateRpm();
 void resetIntervalClicks();
 
-void checkPotentiometer();
-int getPotReading();
-
 void checkButtons();
 void handleButton(int num);
 bool wasAnyPuttonPressed();
