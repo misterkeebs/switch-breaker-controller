@@ -61,21 +61,24 @@
 // 10 - Potentiometer
 
 /** OLED Screen pins */
-#define OLED_SCK D5
-#define OLED_SDA D7
-#define OLED_RST D6
-#define OLED_DC D8
-#define OLED_CS D0
+#define OLED_SCK D5 // NodeMCU
+#define OLED_SDA D7 // NodeMCU
+#define OLED_RST D6 // NodeMCU
+#define OLED_DC  D8 // NodeMCU
+#define OLED_CS  D0 // NodeMCU
 
 /** Push Button pin */
-#define PUSH_BUT 4
+#define PUSH_BUT 4 // mcp23017
 
 /** Rotary encoder pins */
-#define ROT_CLK 5
-#define ROT_DT 6
-#define ROT_SW 7
+#define ROT_CLK 5 // mcp23017
+#define ROT_DT  6 // mcp23017
+#define ROT_SW  7 // mcp23017
+
+// MX Switch Actuation Counter
+#define MX 3 // mcp23017
 
 // Motor Controller L293D
-#define MOTOR_ENABLE1 16
-#define MOTOR_ENABLE2 0
-#define MOTOR_PWM 15
+#define MOTOR_ENABLE1 2  // mcp23017
+#define MOTOR_ENABLE2 1  // mcp23017
+#define MOTOR_PWM     D4 // NodeMCU
