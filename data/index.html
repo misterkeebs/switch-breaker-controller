@@ -103,7 +103,7 @@
 
     const sendStatus = json => {
       console.log('Sending status', json);
-      return fetch('/api/set', {
+      return fetch('/set', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -142,7 +142,7 @@
     };
 
     const getStatus = () => {
-      fetch('/api/status')
+      fetch('/status')
         .then(response => response.json())
         .then(status => {
           setStatus(status);
@@ -154,7 +154,7 @@
     };
 
     if (!!window.EventSource) {
-      const source = new EventSource('/api/events');
+      const source = new EventSource('/events');
       source.addEventListener('open', e => {
         console.log('Events Connected');
       }, false);
@@ -169,7 +169,7 @@
 
       source.addEventListener('change', function (e) {
         console.log("change", e.data);
-        getStatus();
+        setStatus(JSON.parse(e.data));
       }, false);
     }
 

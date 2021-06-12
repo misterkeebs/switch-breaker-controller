@@ -9,8 +9,6 @@
 #include "AsyncJson.h"
 #include "ArduinoJson.h"
 
-#include <pages.h>
-
 // ESP8266WebServer server(80);
 AsyncWebServer server(80);
 
@@ -38,7 +36,8 @@ void sendStatus(AsyncWebServerRequest *request) {
 
 void initWebServer() {
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
-    request->send(200, "text/html", index_html);
+    Serial.println("Sending index.html...");
+    request->send(SPIFFS, "/index.html");
   });
 
   server.on("/status", HTTP_GET, [](AsyncWebServerRequest *request) {

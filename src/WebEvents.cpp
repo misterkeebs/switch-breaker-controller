@@ -1,5 +1,7 @@
 #include <ESPAsyncWebServer.h>
 #include <WebEvents.h>
+#include <Motors.h>
+#include <Switch.h>
 
 AsyncEventSource events("/events");
 
@@ -15,5 +17,17 @@ void initEvents(AsyncWebServer *server) {
 
 void notifyClient() {
   Serial.println("Notifying client...");
-  events.send("refresh", "change", millis());
+  String json = "{";
+  json += "\"running\":";
+  json += isMotorRunning();
+  json += ", \"speed\":";
+  json += getMotorSpeed();
+  json += ", \"direction\":";
+  json += getMotorDirection() == MOTOR_FORWARD ? "\"forward\"" : "\"backward\"";
+  json += ", \"clicks\":";
+  json += getClicks();
+  json += ", \"rpm\":";
+  json += getRpm();
+  json += "}";
+  events.send(json.c_str(), "change", millis());
 }

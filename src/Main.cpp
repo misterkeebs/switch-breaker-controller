@@ -20,6 +20,11 @@ void setup()
   Serial.println("Starting...");
   delay(1000);
 
+  if (!SPIFFS.begin()) {
+    Serial.println("An Error has occurred while mounting SPIFFS");
+    return;
+  }
+
   // motor driver
   pinMode(MOTOR_PWM, OUTPUT);
   pinMode(MOTOR_ENABLE1, OUTPUT);

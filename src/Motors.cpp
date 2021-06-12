@@ -6,8 +6,8 @@
 bool curMotorRunning = true;
 bool motorRunning = false;
 
-bool curMotorDirection = MOTOR_BACKWARD;
-bool motorDirection = MOTOR_FORWARD;
+bool curMotorDirection = MOTOR_FORWARD;
+bool motorDirection = MOTOR_BACKWARD;
 
 int curMotorSpeed = -1;
 int motorSpeed = 0; // 0-10
