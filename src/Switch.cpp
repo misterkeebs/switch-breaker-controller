@@ -2,6 +2,7 @@
 #include <Motors.h>
 #include <Pinout.h>
 #include <Switch.h>
+#include <WebEvents.h>
 
 #define SWITCH_DEBOUNCE 100
 
@@ -34,8 +35,9 @@ void checkSwitch() {
       clickCounter += 1;
       intervalClickCounter += 1;
       switchLastTime = millis();
-      Serial.print("MX Pressed");
+      Serial.print("MX Pressed ");
       Serial.println(clickCounter);
+      notifyClient();
     }
   }
   updateRpm();

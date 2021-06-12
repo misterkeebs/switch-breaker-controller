@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang=en>
+
+<head>
+  <meta charset=utf-8>
+  <title>MrBreaker</title>
+  <link rel="stylesheet" href="https://unpkg.com/onsenui/css/onsenui.css">
+  <link rel="stylesheet" href="https://unpkg.com/onsenui/css/onsen-css-components.min.css">
+  <script src="https://unpkg.com/onsenui/js/onsenui.min.js"></script>
+  <style>
+    .label {
+      text-align: right;
+      width: 80px;
+      font-weight: bold;
+    }
+
+    .value {
+      padding-left: 10px;
+    }
+  </style>
+</head>
+
+<body>
+  <ons-page>
+    <ons-toolbar id="home-toolbar">
+      <div class="center">MrBreaker</div>
+    </ons-toolbar>
+
+    <div style="text-align: center; margin-top: 20px;">
+      <ons-card>
+        <div class="content">
+          <ons-list>
+            <ons-list-header>
+              Status
+            </ons-list-header>
+            <ons-list-item>
+              <div class="label">
+                Motor
+              </div>
+              <div class="value" id="motor">
+                running
+              </div>
+            </ons-list-item>
+            <ons-list-item>
+              <div class="label">
+                Speed
+              </div>
+              <div class="value" id="speed">
+                10
+              </div>
+            </ons-list-item>
+            <ons-list-item>
+              <div class="label">
+                Direction
+              </div>
+              <div class="value" id="direction">
+                forward
+              </div>
+            </ons-list-item>
+            <ons-list-item>
+              <div class="label">
+                Presses
+              </div>
+              <div class="value" id="presses">
+                0
+              </div>
+            </ons-list-item>
+            <ons-list-item>
+              <div class="label">
+                RPM
+              </div>
+              <div class="value" id="rpm">
+                0
+              </div>
+            </ons-list-item>
+          </ons-list>
+        </div>
+      </ons-card>
+
+      <div>
+        <ons-button onclick="toggleMotor()" id="motorBtn">Start</ons-button>
+        <ons-button onclick="speedDn()" id="speedUpBtn">-</ons-button>
+        <ons-button onclick="speedUp()" id="speedDnBtn">+</ons-button>
+      </div>
+    </div>
+
+    <div id="error"></div>
+
+    <ons-bottom-bar>
+
+    </ons-bottom-bar>
+  </ons-page>
+  <script>
+    let status;
+
+    const motor = document.getElementById('motor');
+    const speed = document.getElementById('speed');
+    const direction = document.getElementById('direction');
+    const presses = document.getElementById('presses');
+    const rpm = document.getElementById('rpm');
+    const error = document.getElementById('error');
+    const motorBtn = document.getElementById('motorBtn');
+
+    const sendStatus = json => {
+      console.log('Sending status', json);
+      return fetch('/api/set', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(json),
+      })
+        .then(response => response.json())
+        .then(setStatus).catch(err => {
+          error.innerHTML = err;
+        });
+    };
+
+    const setStatus = _status => {
+      status = _status;
+      motorBtn.innerHTML = status.running ? 'Stop' : 'Start';
+      motor.innerHTML = status.running ? "running" : "stopped";
+      speed.innerHTML = status.speed;
+      direction.innerHTML = status.direction;
+      presses.innerHTML = status.clicks;
+      rpm.innerHTML = status.rpm;
+    };
+
+    const toggleMotor = () => {
+      const motor = motorBtn.innerHTML === 'Start';
+      sendStatus({ motor });
+    };
+
+    const speedUp = () => {
+      const speed = status.speed + 1;
+      sendStatus({ speed });
+    };
+
+    const speedDn = () => {
+      const speed = status.speed - 1;
+      sendStatus({ speed });
+    };
+
+    const getStatus = () => {
+      fetch('/api/status')
+        .then(response => response.json())
+        .then(status => {
+          setStatus(status);
+          // setTimeout(() => getStatus(), 500);
+        })
+        .catch(err => {
+          error.innerHTML = 'Error loading page: ' + err;
+        });
+    };
+
+    if (!!window.EventSource) {
+      const source = new EventSource('/api/events');
+      source.addEventListener('open', e => {
+        console.log('Events Connected');
+      }, false);
+      source.addEventListener('error', e => {
+        if (e.target.readyState != EventSource.OPEN) {
+          console.log('Events Disconnected');
+        }
+      });
+      source.addEventListener('message', function (e) {
+        console.log('message', e.data);
+      }, false);
+
+      source.addEventListener('change', function (e) {
+        console.log("change", e.data);
+        getStatus();
+      }, false);
+    }
+
+    getStatus();
+  </script>
+</body>
+
+</html>
