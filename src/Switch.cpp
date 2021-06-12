@@ -3,9 +3,10 @@
 #include <Pinout.h>
 #include <Switch.h>
 
-#define SWITCH_DEBOUNCE 200
+#define SWITCH_DEBOUNCE 100
 
 int switchReading;
+int curSwitchReading;
 long switchLastTime = 0;
 long clickCounter = 0;
 long intervalClickCounter = 0;
@@ -26,13 +27,16 @@ void setCountingClicks(bool enabled) {
 }
 
 void checkSwitch() {
-  if (!isMotorRunning()) return;
   switchReading = digitalRead(SWITCH);
-  if (switchReading == LOW && millis() - switchLastTime > SWITCH_DEBOUNCE) {
-    Serial.println("MX Pressed");
-    clickCounter += 1;
-    intervalClickCounter += 1;
-    switchLastTime = millis();
+  if (curSwitchReading != switchReading) {
+    curSwitchReading = switchReading;
+    if (switchReading == LOW && millis() - switchLastTime > SWITCH_DEBOUNCE) {
+      clickCounter += 1;
+      intervalClickCounter += 1;
+      switchLastTime = millis();
+      Serial.print("MX Pressed");
+      Serial.println(clickCounter);
+    }
   }
   updateRpm();
 }
