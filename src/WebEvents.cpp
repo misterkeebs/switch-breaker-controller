@@ -2,8 +2,9 @@
 #include <WebEvents.h>
 #include <Motors.h>
 #include <Switch.h>
+#include <Program.h>
 
-AsyncEventSource events("/events");
+AsyncEventSource events("/api/events");
 
 void initEvents(AsyncWebServer *server) {
   events.onConnect([](AsyncEventSourceClient *client) {
@@ -28,6 +29,14 @@ void notifyClient() {
   json += getClicks();
   json += ", \"rpm\":";
   json += getRpm();
+  json += ", \"program\":";
+  json += isProgrammed();
+  json += ", \"programLength\":";
+  json += getCyclePresses();
+  json += ", \"programDuration\":";
+  json += getCycleDuration();
+  json += ", \"programDurationFormatted\":";
+  json += "\"" + getFormattedCycleDuration() + "\"";
   json += "}";
   events.send(json.c_str(), "change", millis());
 }

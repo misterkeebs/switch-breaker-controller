@@ -1,71 +1,55 @@
-// #ifndef SCREEN_PROGRAM_H
-// #define SCREEN_PROGRAM_H
+#include <Arduino.h>
+#include <Motors.h>
+#include <Switch.h>
+#include <Utils.h>
 
-// #include <Colors.h>
-// #include <Gfx.h>
-// #include <Input.h>
-// #include <Motors.h>
-// #include <Screens.h>
-// #include <Utils.h>
+int cyclePresses = 0;
+long programStarted = -1;
 
-// #include "Screen.cpp"
+bool isProgrammed() {
+  return cyclePresses > 0;
+}
 
-// class Program : public Screen {
-//   private:
-//     bool init = false;
-//     int cycleAmount = 0;
-//     int curCycleAmount = -1;
-//     int curPotReading = -1;
-//   public:
-//     Program() : Screen() {
-//     }
+void startProgram(int size) {
+  programStarted = millis();
+  cyclePresses = size;
+  startMotor();
+}
 
-//     void reset() {
-//       init = false;
-//       cycleAmount = 0;
-//       curCycleAmount = -1;
-//       curPotReading = -1;
-//     }
+void pauseProgram() {
+  stopMotor();
+}
 
-//     int draw() override {
-//       if (!init) {
-//         clearScreen();
-//         box(0, 0, 96, 64, WHITE);
+void resumeProgram() {
+  startMotor();
+}
 
-//         init = true;
-//         banner("O=Accpt", 2, 50, 46, 12, 1, DKGRAY, LTGRAY);
-//         banner("X=Back", 49, 50, 45, 12, 1, DKGRAY, LTGRAY);
+void stopProgram() {
+  stopMotor();
+  programStarted = -1;
+  cyclePresses = 0;
+}
 
-//         banner("Cycle length:", 5, 5, 86, 12, 0, YELLOW, BLACK);
-//         banner("x1000", 45, 25, 40, 12, 0, WHITE, BLACK);
-//       }
+int getCyclePresses() {
+  return cyclePresses;
+}
 
-//       if (wasButton2Pressed()) {
-//         reset();
-//         return SCR_BREAKIN;
-//       }
+String getFormattedCycleDuration() {
+  if (!isProgrammed()) return "";
+  return formatMillis(millis() - programStarted);
+}
 
-//       if (wasButton1Pressed()) {
-//         setProgramCycle(cycleAmount * 1000);
-//         reset();
-//         return SCR_BREAKIN;
-//       }
+long getCycleDuration() {
+  if (!isProgrammed()) return -1;
+  return millis() - programStarted;
+}
 
-//       if (peekMoveDelta() != 0) {
-//         cycleAmount += getMoveDelta();
-//         if (cycleAmount > 200) cycleAmount = 200;
-//         if (cycleAmount < 1) cycleAmount = 1;
-//       }
+void checkProgram() {
+  if (!isProgrammed()) return;
+  if (!isMotorRunning()) return;
 
-//       if (curCycleAmount != cycleAmount) {
-//         curCycleAmount = cycleAmount;
-//         char amount[3];
-//         sprintf(amount, "%lu", cycleAmount);
-//         banner(amount, 15, 25, 30, 12, 1, WHITE, RED);
-//       }
-
-//       return SCR_PROGRAM;
-//     }
-// };
-
-// #endif
+  int curPresses = getClicks();
+  if (curPresses >= cyclePresses) {
+    stopMotor();
+  }
+}

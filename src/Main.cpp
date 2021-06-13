@@ -40,8 +40,6 @@ void setup()
 }
 
 void loop() {
-  handleServer();
-
   IPAddress ip = WiFi.localIP();
   if (curIp != ip) {
     curIp = ip;

@@ -17,6 +17,10 @@
     .value {
       padding-left: 10px;
     }
+
+    .loaded {
+      display: none;
+    }
   </style>
 </head>
 
@@ -28,52 +32,39 @@
 
     <div style="text-align: center; margin-top: 20px;">
       <ons-card>
-        <div class="content">
+        <div class="content loaded">
           <ons-list>
             <ons-list-header>
               Status
             </ons-list-header>
             <ons-list-item>
-              <div class="label">
-                Motor
-              </div>
-              <div class="value" id="motor">
-                running
-              </div>
+              <div class="label">Motor</div>
+              <div class="value" id="motor">-</div>
             </ons-list-item>
             <ons-list-item>
-              <div class="label">
-                Speed
-              </div>
-              <div class="value" id="speed">
-                10
-              </div>
+              <div class="label">Speed</div>
+              <div class="value" id="speed">-</div>
             </ons-list-item>
             <ons-list-item>
-              <div class="label">
-                Direction
-              </div>
-              <div class="value" id="direction">
-                forward
-              </div>
+              <div class="label">Direction</div>
+              <div class="value" id="direction">-</div>
             </ons-list-item>
             <ons-list-item>
-              <div class="label">
-                Presses
-              </div>
-              <div class="value" id="presses">
-                0
-              </div>
+              <div class="label">Presses</div>
+              <div class="value" id="presses">-</div>
+            </ons-list-item>
+            <ons-list-item id="duration-item">
+              <div class="label">Duration</div>
+              <div class="value" id="duration">-</div>
             </ons-list-item>
             <ons-list-item>
-              <div class="label">
-                RPM
-              </div>
-              <div class="value" id="rpm">
-                0
-              </div>
+              <div class="label">RPM</div>
+              <div class="value" id="rpm">-</div>
             </ons-list-item>
           </ons-list>
+        </div>
+        <div style="text-align: center;">
+          <ons-icon icon="fa-spinner" spin class="loading"></ons-icon>
         </div>
       </ons-card>
 
@@ -81,7 +72,44 @@
         <ons-button onclick="toggleMotor()" id="motorBtn">Start</ons-button>
         <ons-button onclick="speedDn()" id="speedUpBtn">-</ons-button>
         <ons-button onclick="speedUp()" id="speedDnBtn">+</ons-button>
+        <ons-button onclick="reset()" id="resetBtn">Reset</ons-button>
       </div>
+
+      <ons-card>
+        <div style="text-align: center;">
+          <div id="program-placeholder">
+            <i>No program running</i>
+
+            <div style="margin-top: 20px;">
+              <ons-button onclick="showProgramming()" id="showProgBtn">
+                Program
+              </ons-button>
+            </div>
+          </div>
+          <div id="program-input" style="display: none;">
+            <div style="margin-top: 20px;">
+              <p style="padding: 0 80px; text-align: unset;">
+                <ons-row>
+                  <ons-col>
+                    <ons-input id="progLength" placeholder="50" modifier="underbar"></ons-input>
+                  </ons-col>
+                  <ons-col>
+                    x1000
+                  </ons-col>
+                </ons-row>
+              </p>
+              <p>
+                <ons-button onclick="handleStartProgram()">
+                  Start
+                </ons-button>
+                <ons-button onclick="hideProgramming()">
+                  Cancel
+                </ons-button>
+              </p>
+            </div>
+          </div>
+        </div>
+      </ons-card>
     </div>
 
     <div id="error"></div>
@@ -92,18 +120,21 @@
   </ons-page>
   <script>
     let status;
+    let loading = true;
 
     const motor = document.getElementById('motor');
     const speed = document.getElementById('speed');
     const direction = document.getElementById('direction');
     const presses = document.getElementById('presses');
+    const duration = document.getElementById('duration');
     const rpm = document.getElementById('rpm');
     const error = document.getElementById('error');
     const motorBtn = document.getElementById('motorBtn');
+    const progLength = document.getElementById('progLength');
+    const durationItem = document.getElementById('duration-item');
 
-    const sendStatus = json => {
-      console.log('Sending status', json);
-      return fetch('/set', {
+    const post = (path, json) => {
+      return fetch('/api/' + path, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -111,9 +142,34 @@
         body: JSON.stringify(json),
       })
         .then(response => response.json())
+        .catch(err => {
+          error.innerHTML = 'Error loading page: ' + err;
+        });
+    };
+
+    const getStatus = () => {
+      fetch('/api/status')
+        .then(response => response.json())
+        .then(setStatus)
+        .catch(err => {
+          error.innerHTML = 'Error loading page: ' + err;
+        });
+    };
+
+    const startProgram = length => {
+      return post('program', { length }).then(setProgram);
+    };
+
+    const sendStatus = json => {
+      console.log('Sending status', json);
+      return post('set', json)
         .then(setStatus).catch(err => {
           error.innerHTML = err;
         });
+    };
+
+    const setProgram = _status => {
+      setStatus(_status);
     };
 
     const setStatus = _status => {
@@ -122,8 +178,28 @@
       motor.innerHTML = status.running ? "running" : "stopped";
       speed.innerHTML = status.speed;
       direction.innerHTML = status.direction;
-      presses.innerHTML = status.clicks;
+      if (status.program) {
+        const percent = Math.round(status.clicks / status.programLength * 100);
+        presses.innerHTML =
+          status.clicks
+          + " / "
+          + status.programLength
+          + " (" + percent + "%)";
+        duration.innerHTML = status.programDurationFormatted;
+        durationItem.style.display = 'block';
+      } else {
+        presses.innerHTML = status.clicks;
+        durationItem.style.display = 'none';
+      }
       rpm.innerHTML = status.rpm;
+
+      resetBtn.disabled = status.running ? "true" : "";
+
+      if (loading) {
+        loading = false;
+        document.querySelectorAll('.loading').forEach(el => el.style.display = 'none');
+        document.querySelectorAll('.loaded').forEach(el => el.classList.remove('loaded'));
+      }
     };
 
     const toggleMotor = () => {
@@ -141,20 +217,39 @@
       sendStatus({ speed });
     };
 
-    const getStatus = () => {
-      fetch('/status')
-        .then(response => response.json())
-        .then(status => {
-          setStatus(status);
-          // setTimeout(() => getStatus(), 500);
-        })
-        .catch(err => {
-          error.innerHTML = 'Error loading page: ' + err;
-        });
+    const reset = () => {
+      //sendReset();
+    };
+
+    const hide = selector => {
+      document.querySelectorAll(selector).forEach(el => el.style.display = 'none');
+    };
+
+    const show = selector => {
+      document.querySelectorAll(selector).forEach(el => el.style.display = 'block');
+    };
+
+    const showProgramming = () => {
+      hide('#program-placeholder');
+      show('#program-input');
+    };
+
+    const hideProgramming = () => {
+      show('#program-placeholder');
+      hide('#program-input');
+    };
+
+    const handleStartProgram = () => {
+      hide('#program-placeholder');
+      hide('#program-input');
+      show('#program');
+
+      const len = parseInt(progLength.value, 10) * 1000;
+      startProgram(len);
     };
 
     if (!!window.EventSource) {
-      const source = new EventSource('/events');
+      const source = new EventSource('/api/events');
       source.addEventListener('open', e => {
         console.log('Events Connected');
       }, false);
