@@ -10,7 +10,7 @@ bool curMotorDirection = MOTOR_FORWARD;
 bool motorDirection = MOTOR_BACKWARD;
 
 int curMotorSpeed = -1;
-int motorSpeed = 0; // 0-10
+int motorSpeed = 10; // 0-10
 
 long programCycle = -1;
 

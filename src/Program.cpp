@@ -11,6 +11,7 @@ bool isProgrammed() {
 }
 
 void startProgram(int size) {
+  resetClicks();
   programStarted = millis();
   cyclePresses = size;
   startMotor();
@@ -26,6 +27,7 @@ void resumeProgram() {
 
 void stopProgram() {
   stopMotor();
+  resetClicks();
   programStarted = -1;
   cyclePresses = 0;
 }

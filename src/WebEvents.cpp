@@ -20,7 +20,7 @@ void notifyClient() {
   Serial.println("Notifying client...");
   String json = "{";
   json += "\"running\":";
-  json += isMotorRunning();
+  json += isMotorRunning() ? "true" : "false";
   json += ", \"speed\":";
   json += getMotorSpeed();
   json += ", \"direction\":";
@@ -30,7 +30,7 @@ void notifyClient() {
   json += ", \"rpm\":";
   json += getRpm();
   json += ", \"program\":";
-  json += isProgrammed();
+  json += isProgrammed() ? "true" : "false";
   json += ", \"programLength\":";
   json += getCyclePresses();
   json += ", \"programDuration\":";

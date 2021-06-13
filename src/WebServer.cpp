@@ -48,6 +48,11 @@ void initWebServer() {
     sendStatus(request);
   });
 
+  server.on("/api/reset", HTTP_POST, [](AsyncWebServerRequest *request) {
+    stopProgram();
+    sendStatus(request);
+  });
+
   AsyncCallbackJsonWebHandler* progHandler = new AsyncCallbackJsonWebHandler("/api/program", [](AsyncWebServerRequest *request, JsonVariant &json) {
     JsonObject& obj = json.as<JsonObject>();
 

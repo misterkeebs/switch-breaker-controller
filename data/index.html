@@ -64,27 +64,8 @@
           </ons-list>
         </div>
         <div style="text-align: center;">
-          <ons-icon icon="fa-spinner" spin class="loading"></ons-icon>
-        </div>
-      </ons-card>
-
-      <div>
-        <ons-button onclick="toggleMotor()" id="motorBtn">Start</ons-button>
-        <ons-button onclick="speedDn()" id="speedUpBtn">-</ons-button>
-        <ons-button onclick="speedUp()" id="speedDnBtn">+</ons-button>
-        <ons-button onclick="reset()" id="resetBtn">Reset</ons-button>
-      </div>
-
-      <ons-card>
-        <div style="text-align: center;">
-          <div id="program-placeholder">
+          <div id="program-placeholder" style="padding-top: 10px;">
             <i>No program running</i>
-
-            <div style="margin-top: 20px;">
-              <ons-button onclick="showProgramming()" id="showProgBtn">
-                Program
-              </ons-button>
-            </div>
           </div>
           <div id="program-input" style="display: none;">
             <div style="margin-top: 20px;">
@@ -108,8 +89,31 @@
               </p>
             </div>
           </div>
+          <div id="program" style="display: none;">
+            <ons-list>
+              <ons-list-header>
+                Program Info
+              </ons-list-header>
+              <ons-list-item>
+                <div class="label">ETA</div>
+                <div class="value" id="progEstimate">-</div>
+              </ons-list-item>
+            </ons-list>
+          </div>
+        </div>
+        <div style="text-align: center;">
+          <ons-icon icon="fa-spinner" spin class="loading"></ons-icon>
         </div>
       </ons-card>
+
+      <div>
+        <ons-button onclick="toggleMotor()" id="motorBtn">Start</ons-button>
+        <ons-button onclick="showProgramming()" id="progBtn">Program</ons-button>
+        <ons-button onclick="speedDn()" id="speedUpBtn">-</ons-button>
+        <ons-button onclick="speedUp()" id="speedDnBtn">+</ons-button>
+        <ons-button onclick="reset()" id="resetBtn">Reset</ons-button>
+      </div>
+    </div>
     </div>
 
     <div id="error"></div>
@@ -130,10 +134,33 @@
     const rpm = document.getElementById('rpm');
     const error = document.getElementById('error');
     const motorBtn = document.getElementById('motorBtn');
-    const progLength = document.getElementById('progLength');
+    const progBtn = document.getElementById('progBtn');
     const durationItem = document.getElementById('duration-item');
 
-    const post = (path, json) => {
+    const progLength = document.getElementById('progLength');
+    const progEstimate = document.getElementById('progEstimate');
+
+    function formatMilliseconds(milliseconds, padStart) {
+      function pad(num) {
+        return `${num}`.padStart(2, '0');
+      }
+      let asSeconds = milliseconds / 1000;
+
+      let hours = undefined;
+      let minutes = Math.floor(asSeconds / 60);
+      let seconds = Math.floor(asSeconds % 60);
+
+      if (minutes > 59) {
+        hours = Math.floor(minutes / 60);
+        minutes %= 60;
+      }
+
+      return hours
+        ? `${padStart ? pad(hours) : hours}:${pad(minutes)}:${pad(seconds)}`
+        : `${padStart ? pad(minutes) : minutes}:${pad(seconds)}`;
+    }
+
+    const post = (path, json = {}) => {
       return fetch('/api/' + path, {
         method: 'POST',
         headers: {
@@ -160,24 +187,28 @@
       return post('program', { length }).then(setProgram);
     };
 
+    const sendReset = json => {
+      console.log('Sending reset');
+      return post('reset', json).then(setStatus);
+    }
+
     const sendStatus = json => {
       console.log('Sending status', json);
-      return post('set', json)
-        .then(setStatus).catch(err => {
-          error.innerHTML = err;
-        });
+      return post('set', json).then(setStatus);
     };
 
     const setProgram = _status => {
       setStatus(_status);
     };
 
+    let curProgram = null;
     const setStatus = _status => {
       status = _status;
       motorBtn.innerHTML = status.running ? 'Stop' : 'Start';
       motor.innerHTML = status.running ? "running" : "stopped";
       speed.innerHTML = status.speed;
       direction.innerHTML = status.direction;
+
       if (status.program) {
         const percent = Math.round(status.clicks / status.programLength * 100);
         presses.innerHTML =
@@ -187,10 +218,37 @@
           + " (" + percent + "%)";
         duration.innerHTML = status.programDurationFormatted;
         durationItem.style.display = 'block';
+
+        const elapsed = status.programDuration;
+        if (status.clicks > 0) {
+          const perClick = elapsed / status.clicks;
+          const estimated = perClick * status.programLength;
+          progEstimate.innerHTML = formatMilliseconds(estimated, true);
+        } else {
+          progEstimate.innerHTML = '...';
+        }
       } else {
         presses.innerHTML = status.clicks;
         durationItem.style.display = 'none';
       }
+
+      if (curProgram !== status.program) {
+        curProgram = status.program;
+        if (curProgram === true) {
+          console.log('program');
+          progBtn.disabled = 'true';
+          hide('#program-placeholder');
+          hide('#program-input');
+          show('#program');
+        } else {
+          console.log('no program');
+          progBtn.disabled = '';
+          show('#program-placeholder');
+          hide('#program-input');
+          hide('#program');
+        }
+      }
+
       rpm.innerHTML = status.rpm;
 
       resetBtn.disabled = status.running ? "true" : "";
@@ -218,7 +276,7 @@
     };
 
     const reset = () => {
-      //sendReset();
+      sendReset();
     };
 
     const hide = selector => {
@@ -232,6 +290,8 @@
     const showProgramming = () => {
       hide('#program-placeholder');
       show('#program-input');
+      progLength.focus();
+      document.querySelector('#progLength > input').select();
     };
 
     const hideProgramming = () => {
