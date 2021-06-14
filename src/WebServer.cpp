@@ -4,15 +4,14 @@
 #include <Input.h>
 #include <Motors.h>
 #include <Program.h>
-#include <WebEvents.h>
 
 #include "AsyncJson.h"
 #include "ArduinoJson.h"
 
 AsyncWebServer server(80);
+AsyncEventSource events("/api/events");
 
-void sendStatus(AsyncWebServerRequest *request) {
-  AsyncResponseStream *response = request->beginResponseStream("application/json");
+JsonObject& getStatusAsJson() {
   DynamicJsonBuffer jsonBuffer;
   JsonObject &obj = jsonBuffer.createObject();
   obj["running"] = isMotorRunning() ? true : false;
@@ -24,9 +23,25 @@ void sendStatus(AsyncWebServerRequest *request) {
   obj["programLength"] = getCyclePresses();
   obj["programDuration"] = getCycleDuration();
   obj["programDurationFormatted"] = getFormattedCycleDuration();
-  obj.printTo(*response);
+  obj["programMessage"] = getMessage();
+  return obj;
+}
+
+void sendStatus(AsyncWebServerRequest *request) {
+  AsyncResponseStream *response = request->beginResponseStream("application/json");
+  getStatusAsJson().printTo(*response);
+  // setMessage("");
+
   response->addHeader("Access-Control-Allow-Origin", "*");
   request->send(response);
+}
+
+void notifyClient() {
+  Serial.println("Notifying client...");
+  char output[1024];
+  getStatusAsJson().printTo(output);
+  setMessage("");
+  events.send(output, "change", millis());
 }
 
 void sendError(AsyncWebServerRequest *request, int httpCode, String error) {
@@ -36,6 +51,16 @@ void sendError(AsyncWebServerRequest *request, int httpCode, String error) {
   obj["error"] = error;
   response->setCode(httpCode);
   request->send(response);
+}
+
+void initEvents(AsyncWebServer *server) {
+  events.onConnect([](AsyncEventSourceClient *client) {
+    if (client->lastId()) {
+      Serial.printf("Last msg id: %u\n", client->lastId());
+    }
+    client->send("hello", NULL, millis(), 1000);
+  });
+  server->addHandler(&events);
 }
 
 void initWebServer() {
