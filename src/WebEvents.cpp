@@ -37,6 +37,9 @@ void notifyClient() {
   json += getCycleDuration();
   json += ", \"programDurationFormatted\":";
   json += "\"" + getFormattedCycleDuration() + "\"";
+  json += ", \"programMessage\":";
+  json += "\"" + getMessage() + "\"";
   json += "}";
+  setMessage("");
   events.send(json.c_str(), "change", millis());
 }

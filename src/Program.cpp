@@ -5,6 +5,15 @@
 
 int cyclePresses = 0;
 long programStarted = -1;
+String message;
+
+String getMessage() {
+  return message;
+}
+
+void setMessage(String msg) {
+  message = msg;
+}
 
 bool isProgrammed() {
   return cyclePresses > 0;
@@ -52,6 +61,13 @@ void checkProgram() {
 
   int curPresses = getClicks();
   if (curPresses >= cyclePresses) {
+    String message = "Program of ";
+    message += cyclePresses;
+    message += " presses finished in ";
+    message += formatMillis(getCycleDuration());
+    setMessage(message);
+    programStarted = -1;
+    cyclePresses = 0;
     stopMotor();
   }
 }

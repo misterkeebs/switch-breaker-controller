@@ -65,7 +65,7 @@
         </div>
         <div style="text-align: center;">
           <div id="program-placeholder" style="padding-top: 10px;">
-            <i>No program running</i>
+            <i id="message"></i>
           </div>
           <div id="program-input" style="display: none;">
             <div style="margin-top: 20px;">
@@ -136,6 +136,7 @@
     const motorBtn = document.getElementById('motorBtn');
     const progBtn = document.getElementById('progBtn');
     const durationItem = document.getElementById('duration-item');
+    const message = document.getElementById('message');
 
     const progLength = document.getElementById('progLength');
     const progEstimate = document.getElementById('progEstimate');
@@ -222,7 +223,7 @@
         const elapsed = status.programDuration;
         if (status.clicks > 0) {
           const perClick = elapsed / status.clicks;
-          const estimated = perClick * status.programLength;
+          const estimated = perClick * (status.programLength - status.clicks);
           progEstimate.innerHTML = formatMilliseconds(estimated, true);
         } else {
           progEstimate.innerHTML = '...';
@@ -231,6 +232,9 @@
         presses.innerHTML = status.clicks;
         durationItem.style.display = 'none';
       }
+
+      console.log('status.programMessage', status.programMessage);
+      message.innerHTML = status.programMessage || 'No program running';
 
       if (curProgram !== status.program) {
         curProgram = status.program;
