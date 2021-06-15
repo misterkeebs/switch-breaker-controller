@@ -1,9 +1,9 @@
 #include <Arduino.h>
 #include <ESPAsyncTCP.h>
 #include <ESPAsyncWebServer.h>
-#include <Input.h>
 #include <Motors.h>
 #include <Program.h>
+#include <Switch.h>
 
 #include "AsyncJson.h"
 #include "ArduinoJson.h"
