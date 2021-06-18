@@ -206,7 +206,7 @@
     const setStatus = _status => {
       status = _status;
       motorBtn.innerHTML = status.running ? 'Stop' : 'Start';
-      motor.innerHTML = status.running ? "running" : "stopped";
+      motor.innerHTML = status.running ? 'running' : 'stopped';
       speed.innerHTML = status.speed;
       direction.innerHTML = status.direction;
 
@@ -214,9 +214,9 @@
         const percent = Math.round(status.clicks / status.programLength * 100);
         presses.innerHTML =
           status.clicks
-          + " / "
+          + ' / '
           + status.programLength
-          + " (" + percent + "%)";
+          + ' (' + percent + '%)';
         duration.innerHTML = status.programDurationFormatted;
         durationItem.style.display = 'block';
 
