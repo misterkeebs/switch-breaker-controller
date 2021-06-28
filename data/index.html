@@ -47,7 +47,7 @@
             </ons-list-item>
             <ons-list-item>
               <div class="label">Direction</div>
-              <div class="value" id="direction">-</div>
+              <div class="value" id="direction" ondblclick="changeDirection()">-</div>
             </ons-list-item>
             <ons-list-item>
               <div class="label">Presses</div>
@@ -111,6 +111,7 @@
         <ons-button onclick="showProgramming()" id="progBtn">Program</ons-button>
         <ons-button onclick="speedDn()" id="speedUpBtn">-</ons-button>
         <ons-button onclick="speedUp()" id="speedDnBtn">+</ons-button>
+        <ons-button onclick="changeDirection()" id="changeDirBtn">&rarr;</ons-button>
         <ons-button onclick="reset()" id="resetBtn">Reset</ons-button>
       </div>
     </div>
@@ -135,6 +136,7 @@
     const error = document.getElementById('error');
     const motorBtn = document.getElementById('motorBtn');
     const progBtn = document.getElementById('progBtn');
+    const changeDirBtn = document.getElementById('changeDirBtn');
     const durationItem = document.getElementById('duration-item');
     const message = document.getElementById('message');
 
@@ -202,6 +204,12 @@
       setStatus(_status);
     };
 
+    const changeDirection = _e => {
+      const dir = direction.innerHTML !== 'forward';
+      console.log('dir', dir);
+      sendStatus({ direction: dir });
+    };
+
     let curProgram = null;
     const setStatus = _status => {
       status = _status;
@@ -209,6 +217,7 @@
       motor.innerHTML = status.running ? 'running' : 'stopped';
       speed.innerHTML = status.speed;
       direction.innerHTML = status.direction;
+      changeDirBtn.innerHTML = status.direction === 'forward' ? '&larr;' : '&rarr;';
 
       if (status.program) {
         const percent = Math.round(status.clicks / status.programLength * 100);
